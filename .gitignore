@@ -1,0 +1,41 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.db
+db.sqlite3
+
+# Virtual environment
+env/
+venv/
+ENV/
+*.env
+*.env.local
+
+# Django Migrations
+*/migrations/*
+
+# Logs
+logs/
+*.log
+
+# Static and media files
+static/
+media/
+
+# IDE/Editor files
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Pytest or coverage reports
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Deployment
+local_settings.py
