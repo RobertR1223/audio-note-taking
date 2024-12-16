@@ -1,43 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { fetchNotes } from "../api/api"; // API to fetch notes
-import NoteList from "../components/notes/NoteList"; // List Component
-import { getAccessToken } from "../utils/token"; // Helper for token management
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import NoteList from "../components/notes/NoteList";
+import NoteForm from "../components/notes/NoteForm";
+import { createNote, updateNote } from "../api/api";
 
 const Home = () => {
-    const [notes, setNotes] = useState([]); // State to hold notes
-    const [loading, setLoading] = useState(true); // Loading state
-    const [error, setError] = useState(""); // Error state
-    const navigate = useNavigate();
+    const [editingNote, setEditingNote] = useState(null);
 
-    // Fetch notes from API
-    useEffect(() => {
-        const loadNotes = async () => {
-            const token = getAccessToken();
-            if (!token) {
-                navigate("/login");
-                return;
-            }
-
-            try {
-                const response = await fetchNotes();
-                setNotes(response.data);
-                setLoading(false);
-            } catch (err) {
-                setError("Failed to load notes. Please try again.");
-                setLoading(false);
-            }
-        };
-
-        loadNotes();
-    }, [navigate]);
+    const handleCreateOrUpdate = async (noteData) => {
+        if (editingNote) {
+            await updateNote(editingNote.id, noteData);
+            setEditingNote(null);
+        } else {
+            await createNote(noteData);
+        }
+        window.location.reload(); // Reload to fetch updated notes
+    };
 
     return (
-        <div className="home-container">
-            <h1>Welcome to Your Notes</h1>
-            {loading && <p>Loading notes...</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            {!loading && !error && <NoteList notes={notes} />}
+        <div className="p-4 max-w-3xl mx-auto">
+            <h1 className="text-3xl font-bold text-center mb-6">Manage Your Notes</h1>
+            <NoteForm
+                onSubmit={handleCreateOrUpdate}
+                existingNote={editingNote}
+                onCancel={() => setEditingNote(null)}
+            />
+            <NoteList onEdit={setEditingNote} />
         </div>
     );
 };
