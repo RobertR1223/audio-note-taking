@@ -27,6 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# For development, set true 
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 
