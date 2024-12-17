@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Header from "./components/common/Header";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -13,7 +14,9 @@ const App = () => {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/" element={<Home />} />
+                <Route element={<ProtectedRoute />}>
+                    <Route path="/" element={<Home />} />
+                </Route>
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </Router>

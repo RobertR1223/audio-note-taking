@@ -7,6 +7,7 @@ class Note(models.Model):
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    audio = models.FileField(upload_to="audio_notes/", null=True, blank=True)
 
     def __str__(self):
         return self.title

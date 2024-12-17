@@ -15,8 +15,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 # Note Serializer
 class NoteSerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source='user.username')
-    
+    audio = serializers.FileField(required=False)  # Optional field for audio upload
+
     class Meta:
         model = Note
-        fields = '__all__'
+        fields = ["id", "title", "description", "audio", "user", "created_at", "updated_at"]
+        read_only_fields = ["user"]
