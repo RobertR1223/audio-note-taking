@@ -1,8 +1,9 @@
 from rest_framework import viewsets, permissions
 from django.contrib.auth.models import User
-from .models import Note
+from .models import Note, AudioFile
 from .serializers import NoteSerializer, UserSerializer
 from .permissions import IsOwner  # Import the custom permission
+
 
 class NoteViewSet(viewsets.ModelViewSet):
     """
@@ -19,9 +20,26 @@ class NoteViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """
-        Automatically associate the note with the logged-in user during creation.
+        Automatically associate the note with the logged-in user during creation
+        and handle multiple audio file uploads.
         """
-        serializer.save(user=self.request.user)
+        note = serializer.save(user=self.request.user)  # Save the note
+        uploaded_audios = self.request.FILES.getlist("uploaded_audios")  # Fetch multiple audio files
+        
+        for audio in uploaded_audios:
+            AudioFile.objects.create(note=note, audio=audio)  # Save each audio file
+
+    def perform_update(self, serializer):
+        """
+        Handle updating a note and optionally uploading new audio files.
+        """
+        note = serializer.save()  # Save updated note details
+        uploaded_audios = self.request.FILES.getlist("uploaded_audios")  # Fetch new audio files
+
+        # Save new audio files linked to the note
+        for audio in uploaded_audios:
+            AudioFile.objects.create(note=note, audio=audio)
+
 
 # User ViewSet
 class UserViewSet(viewsets.ModelViewSet):
