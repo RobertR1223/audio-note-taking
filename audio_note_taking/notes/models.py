@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
+import os
 
 class Note(models.Model):
     """
@@ -25,3 +27,11 @@ class AudioFile(models.Model):
 
     def __str__(self):
         return f"Audio for Note: {self.note.title} - {self.audio.name}"
+    
+    def delete(self, *args, **kwargs):
+        """
+        Override delete to ensure the file is removed from the filesystem.
+        """
+        if self.audio and os.path.isfile(self.audio.path):
+            os.remove(self.audio.path)
+        super().delete(*args, **kwargs)

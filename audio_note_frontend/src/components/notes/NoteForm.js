@@ -92,15 +92,37 @@ const NoteForm = () => {
     // Handle Form Submit
     const handleSubmit = async (e) => {
         e.preventDefault();
+    
+        // Validate input fields
+        if (!formData.title || !formData.description) {
+            alert("Title and description are required.");
+            return;
+        }
+    
+        // Create FormData object
         const formDataToSend = new FormData();
         formDataToSend.append("title", formData.title);
         formDataToSend.append("description", formData.description);
+    
+        // Append each audio file under the 'uploaded_audios' field
         recordings.forEach((recording, index) => {
-            formDataToSend.append(`audio${index + 1}`, recording.blob, `recording${index + 1}.wav`);
+            const fileName = `audio_${index + 1}.wav`; // Sequential naming for clarity
+            formDataToSend.append("uploaded_audios", recording.blob, fileName);
         });
-
-        await createNote(formDataToSend);
-        alert("Note created successfully!");
+    
+        try {
+            // Send the formData to the API
+            const response = await createNote(formDataToSend);
+            console.log("Note created successfully!", response.data);
+    
+            // Provide feedback and reset form
+            alert("Note created successfully!");
+            setFormData({ title: "", description: "" }); // Clear input fields
+            setRecordings([]); // Reset recordings list
+        } catch (error) {
+            console.error("Error creating note:", error.response?.data || error.message);
+            alert("Failed to create note. Please try again.");
+        }
     };
 
     return (
