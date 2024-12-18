@@ -1,7 +1,6 @@
-import React, { useState, useRef } from "react";
-import { createNote } from "../../api/api";
+import React, { useState, useEffect, useRef } from "react";
 
-const NoteForm = () => {
+const NoteForm = ({ onSubmit, existingNote, onCancel }) => {
     const [formData, setFormData] = useState({ title: "", description: "" });
     const [recordings, setRecordings] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
@@ -10,7 +9,7 @@ const NoteForm = () => {
     const mediaRecorderRef = useRef(null);
     const timerRef = useRef(null);
     const startTimeRef = useRef(0);
-    const elapsedTimeRef = useRef(0); // Tracks total elapsed time
+    const elapsedTimeRef = useRef(0);
 
     // Handle form inputs
     const handleChange = (e) => {
@@ -104,26 +103,34 @@ const NoteForm = () => {
         formDataToSend.append("title", formData.title);
         formDataToSend.append("description", formData.description);
     
-        // Append each audio file under the 'uploaded_audios' field
+        // Append each recording under the field 'uploaded_audios'
         recordings.forEach((recording, index) => {
-            const fileName = `audio_${index + 1}.wav`; // Sequential naming for clarity
+            const fileName = `audio_${index + 1}.wav`;
             formDataToSend.append("uploaded_audios", recording.blob, fileName);
         });
     
         try {
-            // Send the formData to the API
-            const response = await createNote(formDataToSend);
-            console.log("Note created successfully!", response.data);
+            // Send form data to the API
+            await onSubmit(formDataToSend);
+            alert("Note saved successfully!");
     
-            // Provide feedback and reset form
-            alert("Note created successfully!");
-            setFormData({ title: "", description: "" }); // Clear input fields
-            setRecordings([]); // Reset recordings list
+            // Reset the form and recordings
+            setFormData({ title: "", description: "" });
+            setRecordings([]);
         } catch (error) {
-            console.error("Error creating note:", error.response?.data || error.message);
-            alert("Failed to create note. Please try again.");
+            console.error("Error submitting note:", error.response?.data || error.message);
+            alert("Failed to save note. Please try again.");
         }
     };
+
+    useEffect(() => {
+        if (existingNote) {
+            console.log('this is existing Note', existingNote);
+            setFormData({ title: existingNote.title, description: existingNote.description });
+        } else {
+            setFormData({ title: "", description: "" });
+        }
+    }, [existingNote]);
 
     return (
         <form onSubmit={handleSubmit} className="p-4 bg-white shadow-md rounded">
@@ -208,9 +215,20 @@ const NoteForm = () => {
                 </div>
             )}
 
-            <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded mt-4">
-                Save Note
-            </button>
+            <div className="mt-4 flex space-x-2">
+                <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">
+                    {existingNote ? "Update Note" : "Save Note"}
+                </button>
+                {existingNote && (
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="bg-gray-500 text-white px-4 py-2 rounded"
+                    >
+                        Cancel
+                    </button>
+                )}
+            </div>
         </form>
     );
 };
