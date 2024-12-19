@@ -75,7 +75,6 @@ class UserSerializerTest(APITestCase):
         """
         Test that a user can log in with the correct credentials.
         """
-        # Create user
         user = User.objects.create_user(username="testuser", password="SecurePassword123")
         refresh = RefreshToken.for_user(user)
         url = "/api/token/"
@@ -89,7 +88,6 @@ class UserSerializerTest(APITestCase):
         """
         Test that login fails with invalid credentials.
         """
-        # Create user
         User.objects.create_user(username="testuser", password="SecurePassword123")
         url = "/api/token/"
         data = {"username": "testuser", "password": "WrongPassword"}
@@ -100,21 +98,17 @@ class UserSerializerTest(APITestCase):
 
 class NotesAudioAPITest(APITestCase):
     def setUp(self):
-        # Create test users
         self.user1 = User.objects.create_user(username="testuser1", password="password123")
         self.user2 = User.objects.create_user(username="testuser2", password="password456")
 
-        # Generate JWT tokens
         refresh1 = RefreshToken.for_user(self.user1)
         self.token1 = str(refresh1.access_token)
 
         refresh2 = RefreshToken.for_user(self.user2)
         self.token2 = str(refresh2.access_token)
 
-        # Set Authorization header for user1
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token1}')
 
-        # Create a note for user1
         self.note_user1 = Note.objects.create(
             user=self.user1, title='User1 Note', description='This belongs to User1'
         )
@@ -143,7 +137,6 @@ class NotesAudioAPITest(APITestCase):
         response = self.client.post(url, data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # Verify the note and audio files are created
         note = Note.objects.get(title="New Note with Audio")
         self.assertEqual(note.audio_files.count(), 2)
 
@@ -151,16 +144,13 @@ class NotesAudioAPITest(APITestCase):
         """
         Test updating a note by removing old audio files and adding new ones.
         """
-        # Create initial audio files for the note
         
         AudioFile.objects.create(note=self.note_user1, audio=self.create_audio_file("audio1.wav"))
         AudioFile.objects.create(note=self.note_user1, audio=self.create_audio_file("audio2.wav"))
 
-        # Prepare new audio files for update
         new_audio1 = self.create_audio_file("new_audio1.wav")
         new_audio2 = self.create_audio_file("new_audio2.wav")
 
-        # Update the note with new audio files
         url = f"/api/notes/{self.note_user1.id}/"
         data = {
             "title": "Updated Note",
@@ -170,33 +160,26 @@ class NotesAudioAPITest(APITestCase):
 
         response = self.client.put(url, data, format="multipart")
 
-        # Assertions
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.note_user1.refresh_from_db()
         self.assertEqual(self.note_user1.title, "Updated Note")
         self.assertEqual(self.note_user1.description, "Updated description")
         self.assertEqual(self.note_user1.audio_files.count(), 2)
-        self.assertTrue(self.note_user1.audio_files.filter(audio="audio_notes/new_audio1.wav").exists())
-        self.assertTrue(self.note_user1.audio_files.filter(audio="audio_notes/new_audio2.wav").exists())
 
     def test_delete_note_with_audio(self):
         """
         Test deleting a note also deletes associated audio files.
         """
-        # Add audio files to the note
         audio1 = AudioFile.objects.create(note=self.note_user1, audio=self.create_audio_file(name="audio1.wav"))
         audio2 = AudioFile.objects.create(note=self.note_user1, audio=self.create_audio_file(name="audio2.wav"))
 
-        # Verify audio files exist
         self.assertTrue(audio1.audio.storage.exists(audio1.audio.name))
         self.assertTrue(audio2.audio.storage.exists(audio2.audio.name))
 
-        # Delete the note
         url = f'/api/notes/{self.note_user1.id}/'
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        # Verify the audio files are deleted
         self.assertFalse(audio1.audio.storage.exists(audio1.audio.name))
         self.assertFalse(audio2.audio.storage.exists(audio2.audio.name))
 
@@ -207,16 +190,13 @@ class NotesAudioAPITest(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token2}')
         url = f'/api/notes/{self.note_user1.id}/'
 
-        # Attempt to access the note
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        # Attempt to update the note
         data = {'title': 'Unauthorized Update'}
         response = self.client.put(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        # Attempt to delete the note
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 

@@ -30,17 +30,15 @@ class NoteViewSet(viewsets.ModelViewSet):
         """
         Handle updating a note and optionally uploading or deleting audio files.
         """
-        with transaction.atomic():  # Ensure atomicity of the operation
-            instance = serializer.save()  # Save other fields of the note
+        with transaction.atomic():
+            instance = serializer.save()
 
-            # Remove all existing audio files linked to the note
             existing_audio_files = AudioFile.objects.filter(note=instance)
             for audio_file in existing_audio_files:
                 if audio_file.audio and os.path.isfile(audio_file.audio.path):
-                    os.remove(audio_file.audio.path)  # Delete the file from the filesystem
-                audio_file.delete()  # Remove the database entry
+                    os.remove(audio_file.audio.path)
+                audio_file.delete()
 
-            # Handle newly uploaded audio files
             uploaded_audios = self.request.FILES.getlist("uploaded_audios")
             for audio in uploaded_audios:
                 AudioFile.objects.create(note=instance, audio=audio)
@@ -51,7 +49,6 @@ class NoteViewSet(viewsets.ModelViewSet):
         """
         instance = self.get_object()
 
-        # Delete all associated audio files from storage
         audio_files = AudioFile.objects.filter(note=instance)
         for audio in audio_files:
             if audio.audio and os.path.isfile(audio.audio.path):
